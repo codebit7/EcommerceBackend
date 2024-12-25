@@ -29,6 +29,6 @@ This project serves as the backend for an e-commerce platform, providing APIs fo
 ### Installation
 
 1. **Clone the repository**:
-   ```bash
+
    git clone https://github.com/codebit7/EcommerceBackend.git
    cd EcommerceBackend
