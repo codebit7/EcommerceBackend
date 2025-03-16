@@ -21,7 +21,6 @@ router.route('/').post(verifyToken,createOrder)
 .get(verifyToken,verifyRole(['admin']),getAllOrders)
 
 
-
 router.get('/:orderId', verifyToken,isOrderOwnerOrAdmin,getAOrder)
 router.get('/user/:userId',verifyToken,getAllOrdersOfUser)
 router.put('/:orderId',verifyToken,verifyRole(['admin']),updateAOrder)
@@ -31,3 +30,4 @@ router.post('/:orderId/cancel',verifyToken,isOrderOwnerOrAdmin,CancelOrder)
 
 
 module.exports = router
+

@@ -22,7 +22,7 @@ router.route('/delete/:id').delete(verifyToken, verifyRole(['admin']),uplaod.arr
 
 
 // customer routes
-router.route('/product').get(verifyToken, getProducts);
+router.route('/products').get(verifyToken, getProducts);
 router.route('/product/:id',).get(verifyToken, getProductById)
 
 

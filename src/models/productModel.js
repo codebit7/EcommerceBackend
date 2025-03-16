@@ -8,6 +8,7 @@ const productSchema = new mongoose.Schema({
     discount: { type: Number, default: 0 },
     category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true },
     brand: { type: String },
+    condition:{type: String , default: "Any"},
     stock: { type: Number, required: true },
     images: [{
       url:String,

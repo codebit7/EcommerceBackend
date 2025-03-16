@@ -1,4 +1,4 @@
-// Import Product model
+
 const Product = require('../models/productModel.js');
 const Category = require('../models/categoryModel.js');
 const { loginUser } = require('./userControllers.js');
@@ -20,7 +20,7 @@ async function createProduct(req, res) {
         return res.status(400).json({ message: "Please fill all the fields" });
     }
 
-    if(files.length ===0){
+    if(files.length === 0){
         return res.status(400).json({ message: "Please add an image" });
     }
 
@@ -147,19 +147,41 @@ async function deleteProduct(req, res) {
     }
    }
 
-async function getProducts(req, res) {
+   async function getProducts(req, res) {
     try {
-        const products = await Product.find().populate('category'); 
+       
+        let { page = 1, limit = 10 } = req.query;
 
-        if (!products || products.length === 0) {
-            return res.status(404).json({ message: "No products found" });
+        const pageNum = parseInt(page, 10);
+        const limitNum = parseInt(limit, 10);
+
+        if (isNaN(pageNum) || isNaN(limitNum) || pageNum < 1 || limitNum < 1) {
+            return res.status(400).json({ message: "Invalid pagination parameters" });
         }
 
-        res.status(200).json({ data: products });
+        const skip = (pageNum - 1) * limitNum;
+
+       
+        const totalProducts = await Product.countDocuments();
+
+        
+        const products = await Product.find()
+            .skip(skip)
+            .limit(limitNum)
+            .populate('category');
+
+        res.status(200).json({
+            data: products,
+            totalProducts,
+            totalPage: Math.ceil(totalProducts / limitNum),
+        });
+
     } catch (error) {
-        res.status(500).json({ message: 'Error retrieving products', error });
+        res.status(500).json({ message: 'Error retrieving products', error: error.message });
     }
 }
+
+
 
 
 async function getProductById(req, res) {
