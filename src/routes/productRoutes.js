@@ -1,7 +1,17 @@
 const express = require('express')
 const router = express.Router();
 const verifyToken = require('../middlewares/verifyToken.js')
-const { getCategory,getProductById,getProducts, createProduct, updateProduct, deleteProduct } = require('../controllers/productControllers.js');
+const { getCategory,
+    getProductById,
+    getProducts, 
+    createProduct,
+     updateProduct, 
+     deleteProduct,
+     getRecommededProducts,
+     productDeals
+    } = require('../controllers/productControllers.js');
+
+
 const verifyRole = require('../middlewares/verifyRole.js');
 const uplaod = require('../middlewares/multer.js');
 
@@ -24,6 +34,10 @@ router.route('/delete/:id').delete(verifyToken, verifyRole(['admin']),uplaod.arr
 // customer routes
 router.route('/products').get(verifyToken, getProducts);
 router.route('/product/:id',).get(verifyToken, getProductById)
+
+router.route('/recommendedProducts').get(verifyToken,getRecommededProducts);
+
+router.route('/productDeals').get(verifyToken,productDeals);
 
 
 module.exports = router

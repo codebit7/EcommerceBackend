@@ -1,43 +1,31 @@
-
 const Product = require('../models/productModel.js');
 const Category = require('../models/categoryModel.js');
-const { loginUser } = require('./userControllers.js');
-const uploadCloudinary = require('../utils/cloudinary.js')
+const uploadCloudinary = require('../utils/cloudinary.js');
 const cloudinary = require('cloudinary').v2;
-
-// Admin controllers
 
 // Create product
 async function createProduct(req, res) {
-    const { name, description, category, price, brand, stock} = req.body;
-    
-    
+    const { name, description, category, price, brand, stock } = req.body;
     const files = req.files;
-
-    
 
     if ([name, description, category, price, brand, stock].some(item => item === "")) {
         return res.status(400).json({ message: "Please fill all the fields" });
     }
 
-    if(files.length === 0){
+    if (!files || files.length === 0) {
         return res.status(400).json({ message: "Please add an image" });
     }
 
     const uploadedUrls = [];
-    
-    for(const file of files){
-        const imageUrl =  await uploadCloudinary(file.path)
-        if(imageUrl){
+    for (const file of files) {
+        const imageUrl = await uploadCloudinary(file.path);
+        if (imageUrl) {
             uploadedUrls.push({
-                url: imageUrl.secure_url, 
-                imageId: imageUrl.public_id 
+                url: imageUrl.secure_url,
+                imageId: imageUrl.public_id
             });
         }
-        
     }
-
-
 
     if (uploadedUrls.length === 0) {
         return res.status(500).json({ message: "No images were uploaded" });
@@ -51,7 +39,7 @@ async function createProduct(req, res) {
             category,
             brand,
             stock,
-            images:uploadedUrls
+            images: uploadedUrls
         });
 
         await newProduct.save();
@@ -62,52 +50,54 @@ async function createProduct(req, res) {
     }
 }
 
-// Update product
-async function updateProduct(req, res) {
-    const { name, description, category, price, brand, stock,imagesToRemove } = req.body;
-    const files = req.files;
 
+async function updateProduct(req, res) {
+    const { name, description, category, price, brand, stock, imagesToRemove } = req.body;
+    const files = req.files;
 
     if ([name, description, category, price, brand, stock].some(item => item === "")) {
         return res.status(400).json({ message: "Please fill all the fields" });
     }
 
-   
-    
     try {
-        const uploadedUrls =[];
-       const product = await Product.findById(req.params.id);
-        if(imagesToRemove && Array.isArray(imagesToRemove)){
-             for(const imageId of imagesToRemove){
-                await cloudinary.uploader.destroy(imageId);
-                product.images =prdouct.images.map((img)=> img.imageId === imageId);
-             }
+        const product = await Product.findById(req.params.id);
+        if (!product) {
+            return res.status(404).json({ message: "Product not found" });
         }
-        
+
+       
+        if (imagesToRemove && Array.isArray(imagesToRemove)) {
+            for (const imageId of imagesToRemove) {
+                await cloudinary.uploader.destroy(imageId);
+                product.images = product.images.filter(img => img.imageId !== imageId);
+            }
+        }
+
+
         const uploadedImages = [];
         for (const file of files) {
             const imageUrl = await uploadCloudinary(file.path);
             if (imageUrl) {
                 uploadedImages.push({
                     url: imageUrl.secure_url,
-                    imageId: imageUrl.public_id 
+                    imageId: imageUrl.public_id
                 });
             }
         }
 
-        uploadedUrls.push(...product.images)
+        product.images.push(...uploadedImages);
 
-        const updatedProduct = await Product.updateOne(
-            {_id: req.params.id},
-            { name, description, category, price, brand, stock ,images:uploadedUrls},
-            { new: true } 
-        );
+       
+        product.name = name;
+        product.description = description;
+        product.category = category;
+        product.price = price;
+        product.brand = brand;
+        product.stock = stock;
 
-        if (!updatedProduct) {
-            return res.status(404).json({ message: "Product not found" });
-        }
+        await product.save();
 
-        res.status(200).json({ message: "Product successfully updated", updatedProduct });
+        res.status(200).json({ message: "Product successfully updated", product });
 
     } catch (error) {
         res.status(500).json({ message: "Something went wrong", error });
@@ -117,15 +107,14 @@ async function updateProduct(req, res) {
 // Delete product
 async function deleteProduct(req, res) {
     try {
-       
         const deletedProduct = await Product.findByIdAndDelete(req.params.id);
-        // console.log(deletedProduct)
-        for (const image of deletedProduct.images) {
-            await cloudinary.uploader.destroy(image.imageId); 
-        }
-
         if (!deletedProduct) {
             return res.status(404).json({ message: 'Product not found' });
+        }
+
+       
+        for (const image of deletedProduct.images) {
+            await cloudinary.uploader.destroy(image.imageId);
         }
 
         res.json({ message: 'Product deleted successfully', deletedProduct });
@@ -135,22 +124,21 @@ async function deleteProduct(req, res) {
     }
 }
 
-
-
-   async function getCategory(req,res){
+// Get categories
+async function getCategory(req, res) {
     try {
-        const category = await Category.find();
-        res.json({category});
-        
+        const categories = await Category.find();
+        res.json({ categories });
+
     } catch (error) {
-        res.status(500).json({ message: 'Error retrieving products', error });
+        res.status(500).json({ message: 'Error retrieving categories', error });
     }
-   }
+}
 
-   async function getProducts(req, res) {
+
+async function getProducts(req, res) {
     try {
-       
-        let { page = 1, limit = 10 } = req.query;
+        let { page = 1, limit = 10, category } = req.query;
 
         const pageNum = parseInt(page, 10);
         const limitNum = parseInt(limit, 10);
@@ -159,13 +147,17 @@ async function deleteProduct(req, res) {
             return res.status(400).json({ message: "Invalid pagination parameters" });
         }
 
+        const filters = {};
+        if (category) {
+            filters.category = category;
+        }
+
         const skip = (pageNum - 1) * limitNum;
 
-       
-        const totalProducts = await Product.countDocuments();
-
         
-        const products = await Product.find()
+        const totalProducts = await Product.countDocuments(filters);
+
+        const products = await Product.find(filters)
             .skip(skip)
             .limit(limitNum)
             .populate('category');
@@ -181,48 +173,108 @@ async function deleteProduct(req, res) {
     }
 }
 
-
-
-
+// Get product by ID
 async function getProductById(req, res) {
     try {
-       
         const product = await Product.findById(req.params.id).populate('category');
-
         if (!product) {
             return res.status(404).json({ message: "Product not found" });
         }
 
-        res.status(200).json({ 
-             message:"OK",
-             data: product });
+        res.status(200).json({ message: "OK", data: product });
 
     } catch (error) {
         res.status(500).json({ message: 'Error retrieving product', error });
     }
 }
 
-
-
-
-async function productRating(req, res){
+// Product Rating
+async function productRating(req, res) {
     try {
-        const {prdouctId, rating , comment} = req.body
-        const {id} = req.user
+        const { productId, rating, comment } = req.body;
+        const userId = req.user.id;
 
-        const product = await Product.findById(prdouctId);
-        if(!product){
-            return res.status(404).json({message: "Product not found"})
+        const product = await Product.findById(productId);
+        if (!product) {
+            return res.status(404).json({ message: "Product not found" });
         }
-        product.ratings.push({ user: id, rating, comment });
-        await product.save()
-        res.status(200).json({message: "Rating added successfully"})
+
+        product.ratings.push({ user: userId, rating, comment });
+        await product.save();
         
+        res.status(200).json({ message: "Rating added successfully" });
+
     } catch (error) {
-        res.status(505).json({message:error.message})
+        res.status(500).json({ message: error.message });
     }
 }
 
+
+
+
+async  function getRecommededProducts(req, res){
+       try {
+
+        let { limit = 10 } = req.query;  
+        limit = parseInt(limit, 10);
+
+        const recommededItems = await Product.aggregate([
+
+            {
+                $addFields: {
+                    averageRating: { $avg: "$ratings.rating" }
+                }
+            },
+            {
+                $sort: { averageRating: -1 } 
+            },
+            {
+                $limit: limit
+            }
+        ])
+
+
+
+        res.status(200).json({
+            message: "Recommeded products retrieved successfully",
+            data: recommededItems
+        });
+        
+       } catch (error) {
+        res.status(500).json({ message: "Error retrieving recommeded products", error: error.message });
+       }
+
+}
+
+
+
+async function productDeals(req,res){
+    try{
+        let {limit = 10} = req.query;
+        limit = parseInt(limit, 10);
+        const productDeals = await Product.find({discount:{$gt:0}})
+        .sort({discount:-1})
+        .limit(limit);
+
+        if(productDeals){
+            res.status(200).json({
+                message: "Product deals retrieved successfully",
+                data: productDeals
+                });
+        }
+        else{
+            res.status(404).json({
+                message: "No product deals found",
+                data: null
+                });
+         }
+
+
+    }
+    catch(error){
+        res.status(500).json({message: "Error retrieving product deals", error: error.message});
+    }
+}
 module.exports = {
     getProducts,
     getProductById,
@@ -230,5 +282,7 @@ module.exports = {
     updateProduct,
     deleteProduct,
     getCategory,
-    productRating
+    productRating,
+    getRecommededProducts,
+    productDeals
 };

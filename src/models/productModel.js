@@ -11,7 +11,7 @@ const productSchema = new mongoose.Schema({
     condition:{type: String , default: "Any"},
     stock: { type: Number, required: true },
     images: [{
-      url:String,
+        url:String,
        imageId:String
       }], 
     ratings: [{
