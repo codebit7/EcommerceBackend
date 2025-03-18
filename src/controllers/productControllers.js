@@ -5,8 +5,9 @@ const cloudinary = require('cloudinary').v2;
 
 // Create product
 async function createProduct(req, res) {
-    const { name, description, category, price, brand, stock } = req.body;
+    const { name, description, category, price, brand, stock ,condition ,discount} = req.body;
     const files = req.files;
+    console.log("Files:", req.files);
 
     if ([name, description, category, price, brand, stock].some(item => item === "")) {
         return res.status(400).json({ message: "Please fill all the fields" });
@@ -36,6 +37,8 @@ async function createProduct(req, res) {
             name,
             description,
             price,
+            condition,
+            discount,
             category,
             brand,
             stock,
@@ -275,6 +278,78 @@ async function productDeals(req,res){
         res.status(500).json({message: "Error retrieving product deals", error: error.message});
     }
 }
+
+
+
+// tem function 
+
+const createProducts = async (req, res) => {
+    try {
+        const products = req.body;
+        const files = req.files; 
+
+        if (!Array.isArray(products) || products.length === 0) {
+            return res.status(400).json({ message: "Invalid product data" });
+        }
+
+        const newProducts = [];
+
+        for (const product of products) {
+            const { name, description, category, price, brand, stock, condition, discount } = product;
+
+            
+            if ([name, description, category, price, brand, stock].some(item => item === "")) {
+                return res.status(400).json({ message: "Please fill all the fields for each product" });
+            }
+
+         
+            const productImages = files.filter(file => file.fieldname.startsWith(`images_${name}`));
+
+            if (productImages.length === 0) {
+                return res.status(400).json({ message: `Please add images for product: ${name}` });
+            }
+
+            
+            const uploadedUrls = [];
+            for (const file of productImages) {
+                const imageUrl = await uploadCloudinary(file.path);
+                if (imageUrl) {
+                    uploadedUrls.push({
+                        url: imageUrl.secure_url,
+                        imageId: imageUrl.public_id
+                    });
+                }
+            }
+
+            if (uploadedUrls.length === 0) {
+                return res.status(500).json({ message: `No images were uploaded for ${name}` });
+            }
+
+           
+            const newProduct = new Product({
+                name,
+                description,
+                price,
+                condition,
+                discount,
+                category,
+                brand,
+                stock,
+                images: uploadedUrls
+            });
+
+            newProducts.push(newProduct);
+        }
+
+       
+        await Product.insertMany(newProducts);
+        res.status(201).json({ message: 'Products created successfully', products: newProducts });
+
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 module.exports = {
     getProducts,
     getProductById,
@@ -284,5 +359,6 @@ module.exports = {
     getCategory,
     productRating,
     getRecommededProducts,
-    productDeals
+    productDeals,
+    createProducts
 };

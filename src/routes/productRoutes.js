@@ -8,7 +8,8 @@ const { getCategory,
      updateProduct, 
      deleteProduct,
      getRecommededProducts,
-     productDeals
+     productDeals,
+     createProducts
     } = require('../controllers/productControllers.js');
 
 
@@ -22,6 +23,7 @@ const uplaod = require('../middlewares/multer.js');
 
 // Create Products
 router.route('/create').post(verifyToken,verifyRole(["admin"]),uplaod.array('images',10),createProduct)
+router.route('/addAll').post(verifyToken,verifyRole(["admin"]),uplaod.array('images',10),createProducts)
 // Update Products
 router.route('/update/:id').put(verifyToken,verifyRole(['admin']),uplaod.array('images',10),updateProduct)
 // Delete Products
