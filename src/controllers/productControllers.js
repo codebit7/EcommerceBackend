@@ -9,7 +9,7 @@ async function createProduct(req, res) {
     const files = req.files;
     console.log("Files:", req.files);
 
-    if ([name, description, category, price, brand, stock].some(item => item === "")) {
+    if ([name, description, category, price, brand, stock,condition].some(item => item === "")) {
         return res.status(400).json({ message: "Please fill all the fields" });
     }
 
@@ -145,6 +145,7 @@ async function getProducts(req, res) {
 
         const pageNum = parseInt(page, 10);
         const limitNum = parseInt(limit, 10);
+        
 
         if (isNaN(pageNum) || isNaN(limitNum) || pageNum < 1 || limitNum < 1) {
             return res.status(400).json({ message: "Invalid pagination parameters" });

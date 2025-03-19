@@ -55,13 +55,14 @@ const addCartItem = async(req,res)=>{
                cart.items.push({product:productId, quantity:quantity})
             }
 
-
+        
            cart.total = calculateTotal(cart.items);
         }
 
 
 
         const updatedCart = await cart.save();
+        
 
         res.status(200).json(updatedCart);
         
