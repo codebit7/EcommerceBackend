@@ -256,7 +256,7 @@ async function productDeals(req,res){
     try{
         let {limit = 10} = req.query;
         limit = parseInt(limit, 10);
-        const productDeals = await Product.find({discount:{$gt:0}})
+        const productDeals = await Product.find({discount:{$gt:10}})
         .sort({discount:-1})
         .limit(limit);
 

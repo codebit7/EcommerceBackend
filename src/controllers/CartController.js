@@ -111,12 +111,14 @@ const deleteCartItem = async(req,res)=>{
     
 }
 const updateCartItem = async (req, res) => {
+   
     try {
       const { id } = req.user; 
       const  {productId} =req.params
       const {quantity } = req.body; 
     
 
+      
       const product = await Product.findById(productId);
       if (!product) {
         return res.status(404).json({ message: "Product not found" });
@@ -174,8 +176,11 @@ const clearCart = async(req,res)=>{
     }
 }
 const getCartItems = async(req,res)=>{
+
     try {
         const {id} = req.user
+        
+        
         const cart = await Cart.findOne({user:id}).populate('items.product')
 
         if(!cart)
