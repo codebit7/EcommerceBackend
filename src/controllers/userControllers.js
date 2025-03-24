@@ -7,10 +7,10 @@ const User = require('../models/userModel.js')
 const registerUser =  async(req, res)=>{
 
        try{
-         const {name, email, password ,phone ,role } = req.body
+         const {name, email, password ,role } = req.body
          console.log(req.headers);
          
-         if([name,email,password, phone].some((item) => item ==="")){
+         if([name,email,password].some((item) => item ==="")){
               return res.status(400).json({message: "Please fill in all fields"})
          }
 
@@ -24,7 +24,6 @@ const registerUser =  async(req, res)=>{
               name:name.toLowerCase(),
               email,
               password: hashedPassword,
-              phone,
               role
          })
 

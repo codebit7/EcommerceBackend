@@ -11,7 +11,7 @@ const {createCategory, updateCategory,deleteCategory, getAllCategories}= require
 router
     .route('/')
     .post(verifyToken, verifyRole(["admin"]),createCategory)
-    .get(verifyToken,getAllCategories)
+    .get(getAllCategories)
 router.put('/:id',verifyToken, verifyRole(["admin"]),updateCategory)
 router.delete('/:id',verifyToken, verifyRole(["admin"]),deleteCategory)
 router
