@@ -15,7 +15,7 @@ const addToWishlist = async(req,res)=>{
 
        await User.findByIdAndUpdate(
         req.user.id,
-        {$push:{wishlist:product._id}},
+        {$push:{wishlist:product}},
         {new:true}
        )
         
@@ -24,6 +24,8 @@ const addToWishlist = async(req,res)=>{
         
     } catch (error) {
         res.status(500).json({error:error.message})
+       
+        
     }
 
 
@@ -77,6 +79,7 @@ const getWishlist = async(req,res)=>{
     try {
         const {id} = req.user;
         const user =await User.findById(id)
+        console.log("wishlist request",user.wishlist)
         if(user.wishlist.length == 0)
         {
             return res.status(404).json({message:"Items not found in Wishlist"})
@@ -85,6 +88,7 @@ const getWishlist = async(req,res)=>{
         
     } catch (error) {
         res.status(500).json({error:error.message})
+        console.log("error",error.message);
     }
 
 }

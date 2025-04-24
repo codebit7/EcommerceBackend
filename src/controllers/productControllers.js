@@ -141,7 +141,9 @@ async function getCategory(req, res) {
 
 async function getProducts(req, res) {
     try {
-        let { page = 1, limit = 10, category } = req.query;
+        let { page = 1, limit = 10, category} = req.query;
+        console.log("fetch products hit");
+        
 
         const pageNum = parseInt(page, 10);
         const limitNum = parseInt(limit, 10);

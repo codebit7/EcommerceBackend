@@ -22,12 +22,12 @@ const uplaod = require('../middlewares/multer.js');
 // Admin routes
 
 // Create Products
-router.route('/create').post(uplaod.array('images',10),createProduct)
+router.route('/create').post(verifyRole(['admin']),uplaod.array('images',10),createProduct)
 // router.route('/addAll').post(verifyToken,verifyRole(["admin"]),uplaod.array('images',10),createProducts)
 // Update Products
 router.route('/update/:id').put(verifyToken,verifyRole(['admin']),uplaod.array('images',10),updateProduct)
 // Delete Products
-router.route('/delete/:id').delete(verifyToken, verifyRole(['admin']),uplaod.array('images',10), deleteProduct);
+router.route('/delete/:id').delete(uplaod.array('images',10), deleteProduct);
 
 
 
@@ -35,11 +35,11 @@ router.route('/delete/:id').delete(verifyToken, verifyRole(['admin']),uplaod.arr
 
 // customer routes
 router.route('/products').get(getProducts);
-router.route('/product/:id',).get(verifyToken, getProductById)
+router.route('/product/:id',).get( getProductById)
 
 router.route('/recommendedProducts').get(verifyToken,getRecommededProducts);
 
-router.route('/productDeals').get(verifyToken,productDeals);
+router.route('/productDeals').get(productDeals);
 
 
 module.exports = router
